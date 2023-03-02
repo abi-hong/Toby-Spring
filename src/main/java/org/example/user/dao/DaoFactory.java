@@ -9,11 +9,15 @@ public class DaoFactory {//팩토리를 통해 객체를 생성해서 반환함�
 
     @Bean//Ioc용 오브젝트 생성 메소드
     public UserDao userDao(){
+
+        /* 팩토리의 메소드는 UserDao 타입의 오브젝트를 어떻게 만들고 어떻게 준비시킬지를 결정한다.
+        return new UserDao(new DConnectionDao());
+        */
         return new UserDao(connectionMaker());
     }
 
     @Bean
-    public ConnectionMaker connectionMaker(){
+    public ConnectionMaker connectionMaker(){ //분리해서 중복을 제거함
         return new DConnectionMaker();
     }
 }
