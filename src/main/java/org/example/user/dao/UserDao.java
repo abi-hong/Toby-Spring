@@ -2,6 +2,7 @@ package org.example.user.dao;
 
 import org.example.user.domain.User;
 
+import javax.sql.DataSource;
 import java.sql.*;
 
 public class UserDao {//abstract 상속을 사용
@@ -13,6 +14,7 @@ public class UserDao {//abstract 상속을 사용
         connectionMaker = new DConnectionMaker();
     }*/
     ConnectionMaker connectionMaker;
+    DataSource dataSource;
     //private Connection c와 같이 싱글톤객체에서는 상태가 변하는 변수를 갖으면 안된다
     public UserDao(ConnectionMaker connectionMaker){
         //connectionMaker = new DConnectionMaker()의 형태에서 벗어나 객체의 클래스 종속성을 없애기 위해 외부에서 객체를 주입
@@ -43,17 +45,45 @@ public class UserDao {//abstract 상속을 사용
         ps.setString(1, id);
 
         ResultSet rs = ps.executeQuery();
-        rs.next();
-        User user = new User();
-        user.setId(rs.getString("id"));
-        user.setName(rs.getString("name"));
-        user.setPassword(rs.getString("password"));
+        User user = null;
+        if(rs.next()) {
+            user = new User();
+            user.setId(rs.getString("id"));
+            user.setName(rs.getString("name"));
+            user.setPassword(rs.getString("password"));
+        }
 
         rs.close();
         ps.close();
         c.close();
 
+        if(user == null) throw new EmptyResultDataAccessException(1);
+
         return user;
+    }
+
+    public void deleteAll() throws SQLException {
+        Connection c = dataSource.getConnection();
+        PreparedStatement ps = c.prepareStatement("delete from users");
+        ps.executeUpdate();
+
+        ps.close();
+        c.close();
+    }
+
+    public int getCount() throws SQLException {
+        Connection c = dataSource.getConnection();
+        PreparedStatement ps = c.prepareStatement("select count(*) from users");
+
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        int count = rs.getInt(1);
+
+        rs.close();
+        ps.close();
+        c.close();
+
+        return count;
     }
 
     //public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
